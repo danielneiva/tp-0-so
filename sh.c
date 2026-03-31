@@ -87,12 +87,25 @@ runcmd(struct cmd *cmd)
   case '>':
   case '<':
     rcmd = (struct redircmd*)cmd;
-    /* MARK START task3
-     * TAREFA3: Implemente codigo abaixo para executar
-     * comando com redirecionamento. */
-    fprintf(stderr, "redir nao implementado\n");
+    /* MARK START task3 */
+    
+    //fd (file descriptor) é um inteiro que representa um 'lugar' com um 'modo' 
+    int fd = open (rcmd->file,rcmd->mode, 0666); // fd aponta para o arquivo com o modo leitura/escrita
+    if (fd < 0){
+      perror("Redirect error..");
+      exit(1);
+    }
+
+     // Redireciona entrada ou saída
+    // Lembrando que cmd->fd é 0 para stdin e 1 para stdout
+    if (dup2(fd, rcmd->fd) < 0) {  //Agora o 0/1 não aponta mais para a teclado/tela. Agora aponta para o arquivo.
+    perror("dup2");
+    exit(1);
+    }
+    close(fd); // já fizemos uma 'cópia' em dup2 e podemos fechar o fd do arquivo
+
     /* MARK END task3 */
-    runcmd(rcmd->cmd);
+    runcmd(rcmd->cmd); // roda comando já com a entrada ou saída redirecionada.
     break;
 
   case '|':
@@ -147,9 +160,9 @@ main(void)
     }
     /* MARK END task1 */
 
-    if(fork1() == 0)
-      runcmd(parsecmd(buf));
-    wait(&r);
+if(fork1() == 0) // Se retorno do fork() for 0, estamos no processo filho
+      runcmd(parsecmd(buf));  // Filho executa o comando
+    wait(&r); // Pai espera o filho terminar
   }
   exit(0);
 }
