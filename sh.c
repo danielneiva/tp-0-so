@@ -73,10 +73,14 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
-    /* MARK START task2
-     * TAREFA2: Implemente codigo abaixo para executar
-     * comandos simples. */
-    fprintf(stderr, "exec nao implementado\n");
+     /* MARK START task2 */
+    /* Substitui a imagem do processo atual (filho) pelo programa pedido.
+     * execvp procura o executável no PATH e recebe argv terminada em NULL. */
+    execvp(ecmd->argv[0], ecmd->argv);
+
+    /* Se execvp retornar, houve erro. Reporta e sai com código de erro. */
+    perror(ecmd->argv[0]);
+    exit(1);
     /* MARK END task2 */
     break;
 
