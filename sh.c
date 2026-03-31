@@ -74,7 +74,7 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
-     /* MARK START task2 */
+   /* MARK START task2 */
     /* Substitui a imagem do processo atual (filho) pelo programa pedido.
      * execvp procura o executável no PATH e recebe argv terminada em NULL. */
     execvp(ecmd->argv[0], ecmd->argv);
@@ -89,15 +89,15 @@ runcmd(struct cmd *cmd)
   case '<':
     rcmd = (struct redircmd*)cmd;
     /* MARK START task3 */
-    
+
     //fd (file descriptor) é um inteiro que representa um 'lugar' com um 'modo' 
     fd = open (rcmd->file,rcmd->mode, 0666); // fd aponta para o arquivo com o modo leitura/escrita
     if (fd < 0){
       perror("Redirect error..");
       exit(1);
     }
-
-     // Redireciona entrada ou saída
+  
+    // Redireciona entrada ou saída
     // Lembrando que cmd->fd é 0 para stdin e 1 para stdout
     if (dup2(fd, rcmd->fd) < 0) {  //Agora o 0/1 não aponta mais para a teclado/tela. Agora aponta para o arquivo.
     perror("dup2");
@@ -106,14 +106,13 @@ runcmd(struct cmd *cmd)
     close(fd); // já fizemos uma 'cópia' em dup2 e podemos fechar o fd do arquivo
 
     /* MARK END task3 */
+
     runcmd(rcmd->cmd); // roda comando já com a entrada ou saída redirecionada.
     break;
 
   case '|':
     pcmd = (struct pipecmd*)cmd;
-    /* MARK START task4
-     * TAREFA4: Implemente codigo abaixo para executar
-     * comando com pipes. */
+   /* MARK START task4*/
 
      pipe(p);
     
@@ -130,7 +129,7 @@ runcmd(struct cmd *cmd)
       exit(1);
     case 0:
       dup2(p[1], 1);
-      lose(p[0]);
+      close(p[0]);
       close(p[1]);
       runcmd(pcmd->left);
       break;
@@ -142,7 +141,6 @@ runcmd(struct cmd *cmd)
       break;
     }
     
-    fprintf(stderr, "pipe nao implementado\n");
     /* MARK END task4 */
     break;
   }    
@@ -184,7 +182,7 @@ main(void)
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       buf[strlen(buf)-1] = 0;
       if(chdir(buf+3) < 0)
-       fprintf(stderr, "cd: não foi possível mudar para o diretório '%s'\n", buf+3);
+        fprintf(stderr, "cd: não foi possível mudar para o diretório '%s'\n", buf+3);
       continue;
     }
     /* MARK END task1 */
