@@ -57,6 +57,7 @@ void
 runcmd(struct cmd *cmd)
 {
   int p[2], r;
+  int fd;
   struct execcmd *ecmd;
   struct pipecmd *pcmd;
   struct redircmd *rcmd;
@@ -90,7 +91,7 @@ runcmd(struct cmd *cmd)
     /* MARK START task3 */
     
     //fd (file descriptor) é um inteiro que representa um 'lugar' com um 'modo' 
-    int fd = open (rcmd->file,rcmd->mode, 0666); // fd aponta para o arquivo com o modo leitura/escrita
+    fd = open (rcmd->file,rcmd->mode, 0666); // fd aponta para o arquivo com o modo leitura/escrita
     if (fd < 0){
       perror("Redirect error..");
       exit(1);
@@ -116,7 +117,7 @@ runcmd(struct cmd *cmd)
 
      pipe(p);
     
-    if(p < 0){
+    if(pipe(p) < 0){
       perror("PIPE error");
       exit(1);
     }
@@ -129,6 +130,8 @@ runcmd(struct cmd *cmd)
       exit(1);
     case 0:
       dup2(p[1], 1);
+      lose(p[0]);
+      close(p[1]);
       runcmd(pcmd->left);
       break;
     default:
