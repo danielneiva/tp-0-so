@@ -1,0 +1,49 @@
+RELATÓRIO
+
+1. Termo de compromisso
+
+Os membros do grupo afirmam que todo o código desenvolvido para este
+trabalho é de autoria própria.  Exceto pelo material listado no item 3
+deste relatório, os membros do grupo afirmam não ter copiado
+material da Internet nem obtiveram código de terceiros.
+
+2. Membros do grupo e alocação de esforço
+
+Preencha as linhas abaixo com o nome e o e-mail dos integrantes do
+grupo.  Substitua XX pela contribuição de cada membro do grupo no
+desenvolvimento do trabalho.
+
+Daniel Neiva da Silva <@ufmg.br> 50%
+Luana Oliveira Ramos <luanaor2@gmail.com> 50%
+
+
+3. Referências bibliográficas
+. Linux Manual (i.e. $ man 3 exec)
+. https://linux.die.net/man/2/fork
+. https://guialinux.uniriotec.br/
+. Livro Texto (Abraham Silberschatz & CO; Fundamentos de Sistemas Operacionais; Nona Edição)
+
+4. Estruturas de dados
+
+Task 1: Não foi necessario alterar. 
+Resposta: O comando chdir muda o diretório atual. Quando o comando começa com "cd ", o código extrai o caminho do diretório e tenta mudar para esse diretório 
+usando chdir(buf+3). O valor de retorno do chdir é: 0 em caso de sucesso e  -1 em caso de erro (se o diretório não existir ou não tiver permissão). 
+Portanto o if checa se o comando falhou. 
+  
+Obs: O chdir precisa ser executado no processo pai (shell atual), não em um processo filho. Se fosse executado no filho, a mudança de diretório 
+aconteceria apenas no processo filho e não afetaria o shell principal.
+
+Task 2: O processo filho substitui sua imagem pelo programa desejado usando execvp(ecmd->argv[0], ecmd->argv). Assim, ele passa a executar o comando solicitado, mantendo os descritores e variáveis de ambiente herdados do shell. Se execvp falhar, o erro é reportado com perror e o filho termina com exit(1). 
+As estruturas de dados usadas foram as já implementadas: struct cmd (base para qualquer comando, com o campo type ' ' para execução simples) e struct execcmd (especialização de cmd para comandos simples, com argv[MAXARGS] armazenando o nome do programa e seus argumentos, terminado em NULL para execvp).
+Ou seja, o shell cria uma execcmd, preenche argv com o comando e seus parâmetros, e o filho executa execvp, mantendo o shell principal inalterado.
+
+Task 3: O arquivo de origem ou destino é aberto com open(), que retorna um file descriptor (fd) representando esse arquivo no sistema operacional. 
+Esse fd é então associado ao descritor padrão apropriado (0 para entrada ou 1 para saída) usando dup2(fd, rcmd->fd), de modo que o comando que será
+executado (rcmd->cmd) leia ou escreva através do fd padrão redirecionado. Após a duplicação, o fd original é fechado com close(fd) para liberar recursos,
+mantendo o fluxo de dados transparente para o comando. A struct redircmd armazena tanto o arquivo quanto o fd de destino, permitindo que o shell 
+organize múltiplos redirecionamentos
+
+Task 4: O shell implementa o pipe (|) entre dois comandos criando um canal de comunicação usando pipe(p), que retorna dois file descriptors: p[0] para leitura e p[1] para escrita.
+O processo é dividido com fork1(). O Filho (lado esquerdo do pipe) duplica p[1] sobre o stdout com dup2(p[1], 1), fecha os descriptors originais e executa o comando da esquerda (pcmd->left). A saída do comando vai para o pipe.
+O pai (lado direito do pipe): duplica p[0] sobre o stdin com dup2(p[0], 0), fecha os descriptors originais e executa o comando da direita (pcmd->right). O comando lê a entrada vinda do pipe.
+As estruturas usadas são:struct cmd: base, com type = '|' e struct pipecmd: especialização de cmd para pipes, contendo left e right, que apontam para os comandos conectados pelo pipe.
