@@ -13,7 +13,7 @@ Preencha as linhas abaixo com o nome e o e-mail dos integrantes do
 grupo.  Substitua XX pela contribuição de cada membro do grupo no
 desenvolvimento do trabalho.
 
-Daniel Neiva da Silva <@ufmg.br> 50%
+Daniel Neiva da Silva <danielneiva@ufmg.br> 50%
 Luana Oliveira Ramos <luanaor2@gmail.com> 50%
 
 
