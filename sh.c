@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-/* MARK NAME Seu Nome Aqui */
-/* MARK NAME Nome de Outro Integrante Aqui */
+/* Daniel Neiva da Silva */
+/* Luana Oliveira Ramos */
 /* MARK NAME E Etc */
 
 /****************************************************************
