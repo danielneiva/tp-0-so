@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-/* MARK NAME Seu Nome Aqui */
-/* MARK NAME Nome de Outro Integrante Aqui */
+/* Daniel Neiva da Silva */
+/* Luana Oliveira Ramos */
 /* MARK NAME E Etc */
 
 /****************************************************************
@@ -57,6 +57,7 @@ void
 runcmd(struct cmd *cmd)
 {
   int p[2], r;
+  int fd;
   struct execcmd *ecmd;
   struct pipecmd *pcmd;
   struct redircmd *rcmd;
@@ -73,30 +74,73 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
-    /* MARK START task2
-     * TAREFA2: Implemente codigo abaixo para executar
-     * comandos simples. */
-    fprintf(stderr, "exec nao implementado\n");
+   /* MARK START task2 */
+    /* Substitui a imagem do processo atual (filho) pelo programa pedido.
+     * execvp procura o executável no PATH e recebe argv terminada em NULL. */
+    execvp(ecmd->argv[0], ecmd->argv);
+
+    /* Se execvp retornar, houve erro. Reporta e sai com código de erro. */
+    perror(ecmd->argv[0]);
+    exit(1);
     /* MARK END task2 */
     break;
 
   case '>':
   case '<':
     rcmd = (struct redircmd*)cmd;
-    /* MARK START task3
-     * TAREFA3: Implemente codigo abaixo para executar
-     * comando com redirecionamento. */
-    fprintf(stderr, "redir nao implementado\n");
+    /* MARK START task3 */
+
+    //fd (file descriptor) é um inteiro que representa um 'lugar' com um 'modo' 
+    fd = open (rcmd->file,rcmd->mode, 0666); // fd aponta para o arquivo com o modo leitura/escrita
+    if (fd < 0){
+      perror("Redirect error..");
+      exit(1);
+    }
+  
+    // Redireciona entrada ou saída
+    // Lembrando que cmd->fd é 0 para stdin e 1 para stdout
+    if (dup2(fd, rcmd->fd) < 0) {  //Agora o 0/1 não aponta mais para a teclado/tela. Agora aponta para o arquivo.
+    perror("dup2");
+    exit(1);
+    }
+    close(fd); // já fizemos uma 'cópia' em dup2 e podemos fechar o fd do arquivo
+
     /* MARK END task3 */
-    runcmd(rcmd->cmd);
+
+    runcmd(rcmd->cmd); // roda comando já com a entrada ou saída redirecionada.
     break;
 
   case '|':
     pcmd = (struct pipecmd*)cmd;
-    /* MARK START task4
-     * TAREFA4: Implemente codigo abaixo para executar
-     * comando com pipes. */
-    fprintf(stderr, "pipe nao implementado\n");
+   /* MARK START task4*/
+
+     pipe(p);
+    
+    if(pipe(p) < 0){
+      perror("PIPE error");
+      exit(1);
+    }
+
+    r = fork1();
+
+    switch(r){
+    case -1:
+      perror("Fork error on PIPE");
+      exit(1);
+    case 0:
+      dup2(p[1], 1);
+      close(p[0]);
+      close(p[1]);
+      runcmd(pcmd->left);
+      break;
+    default:
+      dup2(p[0], 0);
+      close(p[0]);
+      close(p[1]);
+      runcmd(pcmd->right);
+      break;
+    }
+    
     /* MARK END task4 */
     break;
   }    
@@ -125,19 +169,27 @@ main(void)
   while(getcmd(buf, sizeof(buf)) >= 0){
     /* MARK START task1 */
     /* TAREFA1: O que faz o if abaixo e por que ele é necessário?
-     * Insira sua resposta no código e modifique o fprintf abaixo
-     * para reportar o erro corretamente. */
+     * O comando chdir muda o diretório atual. Quando o comando começa com "cd ", 
+     o código extrai o caminho do diretório e tenta mudar para esse diretório 
+     usando chdir(buf+3). 
+     O valor de retorno do chdir é: 0 em caso de sucesso e  -1 em caso de erro 
+     (se o diretório não existir ou não tiver permissão). 
+     Portanto o if checa se o comando falhou. 
+  
+     Obs: O chdir precisa ser executado no processo pai (shell atual), 
+     não em um processo filho. Se fosse executado no filho, a mudança de diretório 
+     aconteceria apenas no processo filho e não afetaria o shell principal. */
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       buf[strlen(buf)-1] = 0;
       if(chdir(buf+3) < 0)
-        fprintf(stderr, "reporte erro\n");
+        fprintf(stderr, "cd: não foi possível mudar para o diretório '%s'\n", buf+3);
       continue;
     }
     /* MARK END task1 */
 
-    if(fork1() == 0)
-      runcmd(parsecmd(buf));
-    wait(&r);
+if(fork1() == 0) // Se retorno do fork() for 0, estamos no processo filho
+      runcmd(parsecmd(buf));  // Filho executa o comando
+    wait(&r); // Pai espera o filho terminar
   }
   exit(0);
 }
